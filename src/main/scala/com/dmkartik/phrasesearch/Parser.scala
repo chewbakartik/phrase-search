@@ -49,4 +49,18 @@ class Parser() {
   private def addOutput(string: String): Unit = { output = output :+ string }
 
   def getOutput: Array[String] = { output }
+
+  /**
+   * Takes in the search string, and decorates it to preform case insensitive searches
+   * @param string
+   * @return
+   */
+  def setSearchString(string: String): Unit = { search = string }
+
+  /**
+   * Checks the line provided whether the search string is present.
+   * @param line String - Line from file
+   * @return Boolean - Returns true if match is found to exit out of the iterator processing the lines in the file
+   */
+  def searchLine(line: String): Boolean = { search.r.findFirstIn(line).nonEmpty }
 }
