@@ -1,6 +1,16 @@
 package com.dmkartik.phrasesearch
 
 import java.io.File
+import scala.io.BufferedSource
+import scala.io.Source
+import java.nio.charset.MalformedInputException
+
+object Parser {
+  def apply(search: String, path: String): Parser = {
+    val parser = new Parser()
+    parser.parse(search, path)
+  }
+}
 
 /**
  * Parser outputs files that contain the search text in the provided path
@@ -63,4 +73,36 @@ class Parser() {
    * @return Boolean - Returns true if match is found to exit out of the iterator processing the lines in the file
    */
   def searchLine(line: String): Boolean = { search.r.findFirstIn(line).nonEmpty }
+
+  /**
+   * This method is passed as a parameter to the iterator in parse
+   * Checks file if search string is present, adding the filename to the output array if true
+   * @param file
+   * @return Boolean - Returns false always to ensure that the iterator processes each file in the file list.
+   */
+  def parseFile(file: File): Boolean = {
+    try {
+      val f: BufferedSource = Source.fromFile(file)
+      if(ArrayIterator.iterate[String](f.getLines().toArray, (line: String) => searchLine(line))) { addOutput(file.getCanonicalPath) }
+      f.close()
+      false
+    }
+    catch { case e: MalformedInputException => false }
+  }
+
+  /**
+   * This method processes the files provided to search for matches.
+   * @param search
+   * @param path
+   * @return true when at least one file contains the search string, false when none
+   */
+  def parse(search: String, path: String): Parser = {
+    setSearchString(search)
+    val files = getFileList(path)
+    if(files.nonEmpty) {
+      ArrayIterator.iterate[File](files, (file: File) => parseFile(file))
+      if(output.length == 1) { addOutput("No matches.") }
+    }
+    this
+  }
 }
